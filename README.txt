@@ -13,6 +13,42 @@ PURPOSE
     don't like acts as its own sort of recommendation system, just a social not algorithmic. This is why this is simply a project for my
     friends and I to use out of curiosity or help us pick movies!
 
+Movie Recommendation Engine
+
+Overview
+Architecture
+Data Sources
+    Letterboxd user exports
+    MovieLens 32M
+    TMDB
+
+Recommendation Approach
+    SVD
+    User-user collaborative filtering
+    CoClustering
+    Ensemble
+    Future content-based component
+
+Model Evaluation
+    RMSE
+    Precision@K
+    Recall@K
+    NDCG@K
+
+Application
+    Letterboxd CSV upload
+    TMDB matching
+    Personalized recommendations
+    Streamlit UI
+
+Project Structure
+Setup / Installation
+Screenshots
+
+
+
+
+
 Can build a supervised learning model from just the letterboxd and TMDB movie catalog data
     Target: Movie Rating
     Known rating --> learned with trained letterboxd data
