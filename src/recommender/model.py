@@ -6,14 +6,14 @@ def train_models(trainset):
     svd = SVD(
         n_factors=100,
         n_epochs=30,
-        lr_all=0.005,
-        reg_all=0.02
+        lr_all=0.01,
+        reg_all=0.2
     )
 
     cocluster = CoClustering(
-        n_cltr_u=3,
-        n_cltr_i=3,
-        n_epochs=20
+        n_cltr_u=10,
+        n_cltr_i=10,
+        n_epochs=10
     )
 
     svd.fit(trainset)
