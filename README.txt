@@ -74,3 +74,16 @@ Models to compare:
         item item
     SVD
     CoClustering
+
+After testing with real user letterboxd data (mine and a friends), there was a lot of overalp in the recommendations and it 
+didn't feel too personalized. To solve this, I built a content based model using TF-IDF and cosine similarity. I wanted the 
+movie director, cast, and genre to have a significant impact on these recommendations since that is how movies are often picked.
+
+THere is also the cold start problem for movies released after 2023. THese will not be recommended with the content filtering
+models since the movielens data cuts off after 2023. The content based model will solve this problem. A movie that no one else has
+rated can still enter the top 10.
+
+
+Data
+- user_movielens_ratings.csv : user ratings appended to movielens userId, rating, tmdbId
+    USE AS BASE RATING DATA FOR MODELS 

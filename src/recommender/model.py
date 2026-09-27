@@ -22,11 +22,11 @@ def train_models(trainset):
     models = {
         "svd": {
             "model": svd,
-            "weight": 0.3
+            "weight": 0.5
         },
         "cocluster": {
             "model": cocluster,
-            "weight": 0.7
+            "weight": 0.5
         },
     }
 
