@@ -22,7 +22,7 @@ Data Sources
     MovieLens 32M
     TMDB
 
-Recommendation Approach
+Recommendation Approach (which models to test)
     SVD
     User-user collaborative filtering
     CoClustering
@@ -47,43 +47,3 @@ Screenshots
 
 
 
-
-
-Can build a supervised learning model from just the letterboxd and TMDB movie catalog data
-    Target: Movie Rating
-    Known rating --> learned with trained letterboxd data
-    Unknown rating --> predicted with model trained on letterboxd data (is there enough?)
-    Recommend movies with high predicted rating
-        Letterboxd ratings out of 5, others may be out of 10
-        Movie Lens uses 0.5 to 5 star ratings, the same as Letterboxd
-
-
-Can then build a more complex recommendation system with collaborative filtering and matrix factorization
-    This needs the Movie Lense data of user reviews / ratings of movies
-        Can perform TF-IDF evaluation with movie reviews
-        Can create movie clusters based on reviews
-
-But MovieLens data only goes through 2023!
-    This introduces a cold start scenario to my recommendation system. Adding in items that no users have reviewed yet. This is 
-    a good reason to take a hybrid approach to the recommendation system
-    
-Models to compare:
-    Global popularity model
-    KNNBasic
-        user user
-        item item
-    SVD
-    CoClustering
-
-After testing with real user letterboxd data (mine and a friends), there was a lot of overalp in the recommendations and it 
-didn't feel too personalized. To solve this, I built a content based model using TF-IDF and cosine similarity. I wanted the 
-movie director, cast, and genre to have a significant impact on these recommendations since that is how movies are often picked.
-
-THere is also the cold start problem for movies released after 2023. THese will not be recommended with the content filtering
-models since the movielens data cuts off after 2023. The content based model will solve this problem. A movie that no one else has
-rated can still enter the top 10.
-
-
-Data
-- user_movielens_ratings.csv : user ratings appended to movielens userId, rating, tmdbId
-    USE AS BASE RATING DATA FOR MODELS 
