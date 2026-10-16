@@ -9,6 +9,16 @@ Can build a supervised learning model from just the letterboxd and TMDB movie ca
         Movie Lens uses 0.5 to 5 star ratings, the same as Letterboxd
 
 
+Notebook	                Main responsibility
+01_letterboxd_explore	    Understand user-export structure and ratings
+02_feature_engineering	    Clean and prepare movie metadata
+03_rating_predictor	        Explore rating prediction
+04_movielens_data	        Load and inspect collaborative data
+05_recommender_testing	    Test collaborative models and ranking
+06_update_data_sources	    Refresh or compare data sources
+07_content_based_model	    Fit TF-IDF and build user profiles
+08_model_comparison	        Compare models using consistent evaluation
+
 Can then build a more complex recommendation system with collaborative filtering and matrix factorization
     This needs the Movie Lense data of user reviews / ratings of movies
         Can perform TF-IDF evaluation with movie reviews

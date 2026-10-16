@@ -11,5 +11,5 @@ data/movie_catalog.db
 data/movielens/
 data/*.parquet
 data/*.csv
-
+*.zip
 models/*.pkl
