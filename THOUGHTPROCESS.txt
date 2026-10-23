@@ -19,6 +19,10 @@ Notebook	                Main responsibility
 07_content_based_model	    Fit TF-IDF and build user profiles
 08_model_comparison	        Compare models using consistent evaluation
 
+DATA FILES
+./data/movie_with_features.parquet : movie catalog from 32M ML data with tmdbID features (director, genre, keywords, poster url)
+./data/movielens_ratings_w_tmdbId: 32 ML ratings data with userId, tmdbID, rating
+
 Can then build a more complex recommendation system with collaborative filtering and matrix factorization
     This needs the Movie Lense data of user reviews / ratings of movies
         Can perform TF-IDF evaluation with movie reviews
@@ -44,7 +48,3 @@ THere is also the cold start problem for movies released after 2023. THese will 
 models since the movielens data cuts off after 2023. The content based model will solve this problem. A movie that no one else has
 rated can still enter the top 10.
 
-
-Data
-- user_movielens_ratings.csv : user ratings appended to movielens userId, rating, tmdbId
-    USE AS BASE RATING DATA FOR MODELS 
