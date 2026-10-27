@@ -11,13 +11,12 @@ Can build a supervised learning model from just the letterboxd and TMDB movie ca
 
 Notebook	                Main responsibility
 01_letterboxd_explore	    Understand user-export structure and ratings
-02_feature_engineering	    Clean and prepare movie metadata
-03_rating_predictor	        Explore rating prediction
-04_movielens_data	        Load and inspect collaborative data
-05_recommender_testing	    Test collaborative models and ranking
-06_update_data_sources	    Refresh or compare data sources
-07_content_based_model	    Fit TF-IDF and build user profiles
-08_model_comparison	        Compare models using consistent evaluation
+02_rating_predictor         Further analysis and simple predictions
+03_feature_engineering	    Clean and prepare movie metadata
+04_popularity_recommender   Develop popularity recommender for user cold start problem
+05_content_based_model	    Fit TF-IDF and build user profiles
+06_recommender_testing	    Ad-hoc testing of collaborative models and rankings
+07_model_comparison	        Compare models using consistent evaluation
 
 DATA FILES
 ./data/movie_with_features.parquet : movie catalog from 32M ML data with tmdbID features (director, genre, keywords, poster url)

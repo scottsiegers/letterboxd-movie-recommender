@@ -1,7 +1,17 @@
 
 LETTERBOXD MOVIE RECOMMENDER
 
-This application takes in an individual's letterboxd data, matches it to TMDB data to get movie features, and Movie Lense review data.
+This application takes in an individual's letterboxd data, matches it to TMDB data to get movie features, folds it into MovieLens 
+32M ratings dataset, and recommends films based using a hybrid SVD / Content based model approach.
+
+Hosted here: https://letterboxd-movie-recommender.streamlit.app
+
+INSTRUCTIONS
+    1. Download your perosnal letterboxd rating data here: https://letterboxd.com/user/exportdata/
+    2. Choose 'Individual CSV files' and upload the 'ratings.csv' and 'reviews.csv' files from the downloaded letterboxd zip
+    3. Review your letterboxd data!
+    4. Enrich your movies with TMDB data
+    5. Get your recommendations!
 
 PURPOSE
     Letterboxd currently does not have an algorithmic recommendation feature to suggest relevant movies to its users. Other media services 
@@ -13,21 +23,27 @@ PURPOSE
     don't like acts as its own sort of recommendation system, just a social not algorithmic. This is why this is simply a project for my
     friends and I to use out of curiosity or help us pick movies!
 
-Movie Recommendation Engine
 
-Overview
+MOVIE RECOMMENDATION ENGINE 
+
 Architecture
-Data Sources
-    Letterboxd user exports
-    MovieLens 32M
-    TMDB
+    .ipynb Notebooks
+        Notebook	                Main responsibility
+        01_letterboxd_explore	    Understand user-export structure and ratings
+        02_rating_predictor         Further analysis and simple predictions
+        03_feature_engineering	    Clean and prepare movie metadata
+        04_popularity_recommender   Develop popularity recommender for user cold start problem
+        05_content_based_model	    Fit TF-IDF and build user profiles
+        06_recommender_testing	    Ad-hoc testing of collaborative models and rankings
+        07_model_comparison	        Compare models using consistent evaluation
 
-Recommendation Approach (which models to test)
-    SVD
-    User-user collaborative filtering
-    CoClustering
-    Ensemble
-    Future content-based component
+Data Sources
+    Letterboxd user exports (provided by individual users)
+    MovieLens 32M rating dataset
+    TMDB movie data  
+    Main datasets created during 03_feature_engineering.ipynb   
+        ./data/movie_with_features.parquet : movie catalog from 32M ML data with tmdbID features (director, genre, keywords, poster url)
+        ./data/movielens_ratings_w_tmdbId: 32 ML ratings data with userId, tmdbID, rating
 
 Model Evaluation
     RMSE
@@ -35,15 +51,11 @@ Model Evaluation
     Recall@K
     NDCG@K
 
-Application
+Application Flow
     Letterboxd CSV upload
+    Quick profile analysis
     TMDB matching
     Personalized recommendations
-    Streamlit UI
-
-Project Structure
-Setup / Installation
-Screenshots
 
 
 
