@@ -6,10 +6,8 @@ __pycache__/
 
 .DS_Store
 
-data/tmdb_cache.db
-data/movie_catalog.db
+*.db
 data/movielens/
-*.parquet
 *.csv
 *.zip
 *.pkl
