@@ -69,6 +69,11 @@ st.info(
     "or upload CSV files individually. ratings.csv is required."
 )
 
+st.link_button(
+    "Get your Letterboxd data →",
+    "https://letterboxd.com/user/exportdata/",
+)
+
 
 # ==========================================================
 # TMDB client
@@ -333,17 +338,7 @@ if has_upload:
             "posters, and stable movie IDs."
         )
 
-        enrichment_limit = st.selectbox(
-            "How many movies would you like to enrich?",
-            [
-                10,
-                25,
-                50,
-                100,
-                "All movies",
-            ],
-            index=0,
-        )
+
 
         enrich_button = st.button(
             "Match Movies with TMDB",
@@ -358,14 +353,7 @@ if has_upload:
 
         if enrich_button:
 
-            if enrichment_limit == "All movies":
-                movies_to_enrich = user_movies.copy()
-
-            else:
-                movies_to_enrich = user_movies.head(
-                    enrichment_limit
-                ).copy()
-
+            movies_to_enrich = user_movies.copy()
 
             progress_bar = st.progress(0)
 
@@ -753,7 +741,9 @@ def recommendations_section():
                 value=10,
                 step=5,
             )
-
+        st.write("NOTE: content match only are recommendations from the content based model - not based on your ratings. " \
+                    "I am still tweaking this so there might be some funny / bad movies in there.")
+        
         if st.button("Get Recommendations", type="primary"):
 
             enriched = st.session_state["enriched_movies"]

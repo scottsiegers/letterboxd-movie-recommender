@@ -8,7 +8,8 @@ Hosted here: https://letterboxd-movie-recommender.streamlit.app
 
 INSTRUCTIONS
     1. Download your perosnal letterboxd rating data here: https://letterboxd.com/user/exportdata/
-    2. Choose 'Individual CSV files' and upload the 'ratings.csv' and 'reviews.csv' files from the downloaded letterboxd zip
+    2. Choose 'Individual CSV files' and upload the 'ratings.csv' and 'reviews.csv' files 
+       from the downloaded letterboxd zip (or just upload the whole zip file)
     3. Review your letterboxd data!
     4. Enrich your movies with TMDB data
     5. Get your recommendations!
