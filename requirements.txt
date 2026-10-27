@@ -2,4 +2,4 @@ streamlit
 pandas
 numpy
 scikit-surprise
-sklearn.preprocessing
+scikit-learn
