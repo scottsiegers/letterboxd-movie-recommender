@@ -9,7 +9,7 @@ __pycache__/
 data/tmdb_cache.db
 data/movie_catalog.db
 data/movielens/
-data/*.parquet
-data/*.csv
+*.parquet
+*.csv
 *.zip
 models/*.pkl

@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-from surprise import dump
-from src.recommender.model import (train_models, ensemble_recommendations)
-from surprise import Dataset, Reader
+import scipy.sparse as sp
+from src.recommender.content_model import ContentRecommender
 
 from src.letterboxd_parser import (
     parse_letterboxd_uploads,
@@ -13,12 +12,20 @@ from src.letterboxd_parser import (
 from src.tmdb import TMDBClient, enrich_user_movies
 
 
-# LOCATION: app.py
+from src.recommender.hybrid_model import SVDFoldIn, hybrid_recommend
+from surprise import dump
+
+@st.cache_resource
+def load_svd_foldin():
+    _, svd = dump.load("models/svd.pkl")
+    return SVDFoldIn(svd, reg=0.2)
+
+svd_foldin = load_svd_foldin()
 
 @st.cache_data
 def load_base_ratings():
     return pd.read_parquet(
-        "data/combined_ratings_final.parquet"
+        "data/movielens_ratings_w_tmdbId.parquet"
     )
 
 
@@ -27,36 +34,28 @@ base_ratings = load_base_ratings()
 @st.cache_data
 def load_movie_catalog():
     return pd.read_parquet(
-        "data/movie_catalog.parquet"
+        "data/movie_with_features.parquet"
     )
 
 movie_catalog = load_movie_catalog()
 
 @st.cache_resource
-def load_models():
+def load_content_recommender():
+    # TF-IDF matrix: one row per movie, same order as tfidf_tmdb_ids
+    tfidf_matrix = sp.load_npz("models/tfidf_matrix.npz")
 
-    _, svd = dump.load("models/svd.pkl")
-    _, cocluster = dump.load("models/cocluster.pkl")
-    _, user_knn = dump.load("models/user_knn.pkl")
+    # tmdbId for each matrix row, in row order
+    tfidf_ids = pd.read_parquet(
+        "models/tfidf_tmdb_ids.parquet"
+    )["tmdbId"].to_numpy()
 
-    models = {
-        "svd": {
-            "model": svd,
-            "weight": 0.5
-        },
-        "cocluster": {
-            "model": cocluster,
-            "weight": 0.3
-        },
-        "user_knn": {
-            "model": user_knn,
-            "weight": 0.2
-        }
-    }
+    return ContentRecommender(
+        tfidf_matrix=tfidf_matrix,
+        tmdb_ids=tfidf_ids,
+        movie_catalog=movie_catalog,
+    )
 
-    return models
-
-models = load_models()
+content_recommender = load_content_recommender()
 
 
 st.set_page_config(
@@ -737,77 +736,59 @@ if has_upload:
             f"{e}"
         )
 
+st.divider()
 st.header("Recommended for You")
 
-if st.button("Get Recommendations"):
+if "enriched_movies" not in st.session_state:
 
-    new_user_id = int(
-        base_ratings["userId"].max() + 1
+    st.info(
+        "Upload your Letterboxd data and match it with TMDB "
+        "to get recommendations."
     )
 
-    user_ratings = enriched_movies[
-    ["tmdb_id", "Rating"]
-    ].copy()
+else:
 
-    user_ratings = user_ratings.rename(
-        columns={
-            "tmdb_id": "tmdbId",
-            "Rating": "rating"
-        }
-    )
+    opt1, opt2 = st.columns(2)
 
-    user_ratings["userID"] = new_user_id
+    with opt1:
+        n_recs = st.slider(
+            "Number of recommendations",
+            min_value=5,
+            max_value=30,
+            value=10,
+            step=5,
+        )
 
-    user_ratings = user_ratings[
-        ["userID", "tmdbId", "rating"]
-    ]
+    if st.button("Get Recommendations", type="primary"):
 
-    known_movies = set(
-        base_ratings["tmdbId"].unique()
-    )
+        enriched = st.session_state["enriched_movies"]
 
-    user_collab_ratings = user_ratings[
-        user_ratings["tmdbId"].isin(known_movies)
-    ].copy()
+        user_ratings = (
+            enriched[enriched["tmdb_match"] == True]
+            [["tmdb_id", "Rating"]]
+            .rename(columns={
+                "tmdb_id": "tmdbId",
+                "Rating": "rating",
+            })
+        )
 
-    st.write("Combining ratings")
-    combined_ratings = pd.concat(
-        [
-            base_ratings[
-                ["userId", "tmdbId", "rating"]
-            ],
-            user_collab_ratings
-        ],
-        ignore_index=True
-    )
+        try:
+            with st.spinner("Building your taste profile..."):
+                st.session_state["recommendations"] = (
+                    hybrid_recommend(
+                        content_recommender,
+                        svd_foldin,
+                        user_ratings,
+                        n_recs=n_recs,
+                        min_votes=300,
+                        max_svd_weight=0.5,
+                        ratings_for_full_weight=50,
+                    )
+                )
 
-    st.write("Building trainset")
-    reader = Reader(
-        rating_scale=(0.5, 5.0)
-    )
+        except ValueError as e:
+            st.warning(str(e))
 
-    data = Dataset.load_from_df(
-        combined_ratings[
-            ["userID", "tmdbId", "rating"]
-        ],
-        reader
-    )
-
-    trainset = data.build_full_trainset()
-
-    st.write("training models")
-    models = train_models(trainset)
-
-    st.write("Models trained")
-    recommendations = ensemble_recommendations(
-        models=models,
-        userId=new_user_id,
-        combined_ratings=combined_ratings,
-        movie_catalog=movie_catalog,
-        n_recs=10
-    )
-    st.write("Recommendations Complete")
-    st.session_state["recommendations"] = recommendations
 
 if "recommendations" in st.session_state:
 
@@ -823,12 +804,25 @@ if "recommendations" in st.session_state:
 
             with column:
 
-                # if pd.notna(movie["poster_url"]):
-                #     st.image(
-                #         movie["poster_url"],
-                #         use_container_width=True
-                #     )
+                poster = movie.get("poster_url")
 
-                st.markdown(
-                    f"**{movie['title']}**"
-                )
+                if isinstance(poster, str) and poster:
+                    st.image(
+                        poster,
+                        use_container_width=True,
+                    )
+
+                poster = movie.get("poster_url")
+
+
+                st.markdown(f"**{movie['title']}**")
+
+                if pd.notna(movie.get("svd_rating")):
+                    st.caption(f"Predicted rating: {movie['svd_rating']:.1f} / 5")
+                else:
+                    st.caption("New or rare title (content match only)")
+
+                because = movie.get("because_you_liked")
+
+                if isinstance(because, str) and because:
+                    st.caption(f"Because you liked {because}")
