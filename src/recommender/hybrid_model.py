@@ -16,29 +16,18 @@ import pandas as pd
 
 class SVDFoldIn:
 
-    def __init__(self, svd, reg=0.2):
-        """
-        svd : a fitted surprise.SVD (loaded with surprise.dump.load)
-        reg : use the same value as reg_all when you trained it
-        """
-
-        self.svd = svd
+    def __init__(self, mu, qi, bi, raw_ids, reg=0.2):
         self.reg = reg
+        self.mu = float(mu)
+        self.qi = qi
+        self.bi = bi
+        self.raw_ids = np.asarray(raw_ids, dtype=np.int64)
+        self.inner_of = {int(r): i for i, r in enumerate(self.raw_ids)}
 
-        ts = svd.trainset
-        self.mu = ts.global_mean
-        self.qi = svd.qi          # (n_items, n_factors)
-        self.bi = svd.bi          # (n_items,)
-
-        # raw tmdbId <-> inner index
-        self.raw_ids = np.array(
-            [ts.to_raw_iid(i) for i in range(ts.n_items)]
-        ).astype(np.int64)
-
-        self.inner_of = {
-            int(raw): inner
-            for inner, raw in enumerate(self.raw_ids)
-        }
+    @classmethod
+    def from_npz(cls, path, reg=0.2):
+        d = np.load(path)
+        return cls(d["mu"], d["qi"], d["bi"], d["raw_ids"], reg)
 
     def score_user(self, user_ratings):
         """

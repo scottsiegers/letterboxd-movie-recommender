@@ -1,3 +1,6 @@
+import os
+
+import requests
 import streamlit as st
 import pandas as pd
 import scipy.sparse as sp
@@ -17,19 +20,9 @@ from surprise import dump
 
 @st.cache_resource
 def load_svd_foldin():
-    _, svd = dump.load("models/svd.pkl")
-    return SVDFoldIn(svd, reg=0.2)
+    return SVDFoldIn.from_npz("models/svd_items.npz", reg=0.2)
 
 svd_foldin = load_svd_foldin()
-
-@st.cache_data
-def load_base_ratings():
-    return pd.read_parquet(
-        "data/movielens_ratings_w_tmdbId.parquet"
-    )
-
-
-base_ratings = load_base_ratings()
 
 @st.cache_data
 def load_movie_catalog():
@@ -736,93 +729,96 @@ if has_upload:
             f"{e}"
         )
 
-st.divider()
-st.header("Recommended for You")
+@st.fragment
+def recommendations_section():
+    st.divider()
+    st.header("Recommended for You")
 
-if "enriched_movies" not in st.session_state:
+    if "enriched_movies" not in st.session_state:
 
-    st.info(
-        "Upload your Letterboxd data and match it with TMDB "
-        "to get recommendations."
-    )
-
-else:
-
-    opt1, opt2 = st.columns(2)
-
-    with opt1:
-        n_recs = st.slider(
-            "Number of recommendations",
-            min_value=5,
-            max_value=30,
-            value=10,
-            step=5,
+        st.info(
+            "Upload your Letterboxd data and match it with TMDB "
+            "to get recommendations."
         )
 
-    if st.button("Get Recommendations", type="primary"):
+    else:
 
-        enriched = st.session_state["enriched_movies"]
+        opt1, opt2 = st.columns(2)
 
-        user_ratings = (
-            enriched[enriched["tmdb_match"] == True]
-            [["tmdb_id", "Rating"]]
-            .rename(columns={
-                "tmdb_id": "tmdbId",
-                "Rating": "rating",
-            })
-        )
+        with opt1:
+            n_recs = st.slider(
+                "Number of recommendations",
+                min_value=5,
+                max_value=30,
+                value=10,
+                step=5,
+            )
 
-        try:
-            with st.spinner("Building your taste profile..."):
-                st.session_state["recommendations"] = (
-                    hybrid_recommend(
-                        content_recommender,
-                        svd_foldin,
-                        user_ratings,
-                        n_recs=n_recs,
-                        min_votes=300,
-                        max_svd_weight=0.5,
-                        ratings_for_full_weight=50,
-                    )
-                )
+        if st.button("Get Recommendations", type="primary"):
 
-        except ValueError as e:
-            st.warning(str(e))
+            enriched = st.session_state["enriched_movies"]
 
+            user_ratings = (
+                enriched[enriched["tmdb_match"] == True]
+                [["tmdb_id", "Rating"]]
+                .rename(columns={
+                    "tmdb_id": "tmdbId",
+                    "Rating": "rating",
+                })
+            )
 
-if "recommendations" in st.session_state:
-
-    recommendations = st.session_state["recommendations"]
-
-    for start in range(0, len(recommendations), 5):
-
-        row = recommendations.iloc[start:start + 5]
-
-        columns = st.columns(5)
-
-        for column, (_, movie) in zip(columns, row.iterrows()):
-
-            with column:
-
-                poster = movie.get("poster_url")
-
-                if isinstance(poster, str) and poster:
-                    st.image(
-                        poster,
-                        use_container_width=True,
+            try:
+                with st.spinner("Building your taste profile..."):
+                    st.session_state["recommendations"] = (
+                        hybrid_recommend(
+                            content_recommender,
+                            svd_foldin,
+                            user_ratings,
+                            n_recs=n_recs,
+                            min_votes=300,
+                            max_svd_weight=0.5,
+                            ratings_for_full_weight=50,
+                        )
                     )
 
-                poster = movie.get("poster_url")
+            except ValueError as e:
+                st.warning(str(e))
 
 
-                st.markdown(f"**{movie['title']}**")
+    if "recommendations" in st.session_state:
 
-                if pd.notna(movie.get("svd_rating")):
-                    st.caption(f"Predicted rating: {movie['svd_rating']:.1f} / 5")
-                else:
-                    st.caption("New or rare title (content match only)")
+        recommendations = st.session_state["recommendations"]
 
-                because = movie.get("because_you_liked")
+        for start in range(0, len(recommendations), 5):
 
-                if isinstance(because, str) and because:
-                    st.caption(f"Because you liked {because}")
+            row = recommendations.iloc[start:start + 5]
+
+            columns = st.columns(5)
+
+            for column, (_, movie) in zip(columns, row.iterrows()):
+
+                with column:
+
+                    poster = movie.get("poster_url")
+
+                    if isinstance(poster, str) and poster:
+                        st.image(
+                            poster,
+                            use_container_width=True,
+                        )
+
+                    poster = movie.get("poster_url")
+
+
+                    st.markdown(f"**{movie['title']}**")
+
+                    if pd.notna(movie.get("svd_rating")):
+                        st.caption(f"Predicted rating: {movie['svd_rating']:.1f} / 5")
+                    else:
+                        st.caption("New or rare title (content match only)")
+
+                    because = movie.get("because_you_liked")
+
+                    if isinstance(because, str) and because:
+                        st.caption(f"Because you liked {because}")
+recommendations_section()
